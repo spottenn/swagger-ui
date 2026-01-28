@@ -1,0 +1,257 @@
+openapi: 3.2.0
+info:
+  title: OpenAPI 3.2 Features Test
+  version: 1.0.0
+  summary: Test spec for OpenAPI 3.2 new features
+  description: |
+    This specification tests all new features introduced in OpenAPI 3.2:
+    - QUERY HTTP method
+    - additionalOperations
+    - querystring parameter location
+    - Structured tags (parent, kind, summary)
+    - OAuth 2.0 Device Authorization flow
+    - Response summary field
+    - components/mediaTypes
+
+tags:
+  - name: Pets
+    description: Operations on pets
+    summary: Pet management endpoints
+    kind: resource
+  - name: Cats
+    description: Operations on cats
+    summary: Cat-specific endpoints
+    kind: resource
+    parent: Pets
+  - name: Dogs
+    description: Operations on dogs
+    summary: Dog-specific endpoints
+    kind: resource
+    parent: Pets
+  - name: Admin
+    description: Administrative operations
+    kind: admin
+
+servers:
+  - url: https://api.example.com/v1
+    name: Production Server
+    description: Main production server
+  - url: https://staging.example.com/v1
+    name: Staging Server
+    description: Staging environment
+
+paths:
+  /pets:
+    name: Pets Collection
+    get:
+      tags:
+        - Pets
+      summary: List all pets
+      operationId: listPets
+      responses:
+        '200':
+          summary: Successful response
+          description: A list of pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+
+    query:
+      tags:
+        - Pets
+      summary: Query pets with complex filters
+      description: |
+        Uses the QUERY HTTP method (new in OAS 3.2) to perform
+        complex searches with a request body.
+      operationId: queryPets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  properties:
+                    species:
+                      type: string
+                    minAge:
+                      type: integer
+                    maxAge:
+                      type: integer
+                sort:
+                  type: string
+                  enum: [name, age, species]
+                limit:
+                  type: integer
+                  default: 20
+      responses:
+        '200':
+          summary: Query results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+
+    additionalOperations:
+      PURGE:
+        tags:
+          - Admin
+        summary: Purge all pets
+        description: Custom HTTP method using additionalOperations
+        operationId: purgePets
+        responses:
+          '204':
+            summary: Successfully purged
+            description: All pets have been purged
+
+  /pets/{petId}:
+    get:
+      tags:
+        - Pets
+      summary: Get a pet by ID
+      operationId: getPet
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          summary: Pet found
+          description: The requested pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '404':
+          summary: Pet not found
+
+  /cats:
+    get:
+      tags:
+        - Cats
+      summary: List all cats
+      operationId: listCats
+      responses:
+        '200':
+          summary: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cat'
+
+  /search:
+    get:
+      tags:
+        - Pets
+      summary: Search with querystring parameter
+      description: Uses querystring parameter location (new in OAS 3.2)
+      operationId: searchPets
+      parameters:
+        - name: q
+          in: querystring
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  term:
+                    type: string
+                  filters:
+                    type: object
+      responses:
+        '200':
+          summary: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+
+  /events:
+    get:
+      tags:
+        - Pets
+      summary: Stream pet events
+      description: Streaming endpoint using itemSchema
+      operationId: streamEvents
+      responses:
+        '200':
+          summary: Event stream
+          content:
+            text/event-stream:
+              description: Server-sent events stream
+              itemSchema:
+                type: object
+                properties:
+                  event:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Pet'
+
+components:
+  schemas:
+    Pet:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        species:
+          type: string
+        age:
+          type: integer
+
+    Cat:
+      allOf:
+        - $ref: '#/components/schemas/Pet'
+        - type: object
+          properties:
+            meowStyle:
+              type: string
+
+  securitySchemes:
+    OAuth2Device:
+      type: oauth2
+      description: OAuth 2.0 with Device Authorization flow
+      oauth2MetadataUrl: https://auth.example.com/.well-known/oauth-authorization-server
+      flows:
+        deviceAuthorization:
+          deviceAuthorizationUrl: https://auth.example.com/device/code
+          tokenUrl: https://auth.example.com/oauth/token
+          scopes:
+            read:pets: Read access to pets
+            write:pets: Write access to pets
+
+    DeprecatedApiKey:
+      type: apiKey
+      name: X-API-Key
+      in: header
+      description: Legacy API key authentication
+      deprecated: true
+
+  mediaTypes:
+    PetJson:
+      schema:
+        $ref: '#/components/schemas/Pet'
+      description: JSON representation of a pet
+
+security:
+  - OAuth2Device:
+      - read:pets
