@@ -11,6 +11,22 @@ export function isOAS30(jsSpec) {
   )
 }
 
+export function isOAS31(jsSpec) {
+  const oasVersion = jsSpec.get("openapi")
+
+  return (
+    typeof oasVersion === "string" && /^3\.1\.(?:[1-9]\d*|0)$/.test(oasVersion)
+  )
+}
+
+export function isOAS32(jsSpec) {
+  const oasVersion = jsSpec.get("openapi")
+
+  return (
+    typeof oasVersion === "string" && /^3\.2\.(?:[1-9]\d*|0)$/.test(oasVersion)
+  )
+}
+
 export function isSwagger2(jsSpec) {
   const swaggerVersion = jsSpec.get("swagger")
 
@@ -42,6 +58,21 @@ export function OAS30ComponentWrapFactory(Component) {
       }
     } else {
       console.warn("OAS30 wrapper: couldn't get spec")
+      return null
+    }
+  }
+}
+
+export function OAS32ComponentWrapFactory(Component) {
+  return (Ori, system) => (props) => {
+    if (typeof system.specSelectors?.isOAS32 === "function") {
+      if (system.specSelectors.isOAS32()) {
+        return <Component {...props} {...system} Ori={Ori}></Component>
+      } else {
+        return <Ori {...props}></Ori>
+      }
+    } else {
+      console.warn("OAS32 wrapper: couldn't get spec")
       return null
     }
   }

@@ -1,0 +1,360 @@
+openapi: "3.2.0"
+info:
+  title: OpenAPI 3.2 Features Test
+  summary: A comprehensive test spec demonstrating OpenAPI 3.2 features
+  description: |
+    This specification demonstrates the new features introduced in OpenAPI 3.2:
+    - Structured tags with parent, kind, and summary fields
+    - QUERY HTTP method
+    - additionalOperations for non-standard HTTP methods
+    - querystring parameter location
+    - Response summary field (description now optional)
+    - OAuth 2.0 Device Authorization Grant
+    - Reusable media types in components
+  version: "1.0.0"
+  contact:
+    name: API Support
+    email: support@example.com
+    url: https://example.com/support
+  license:
+    name: Apache 2.0
+    identifier: Apache-2.0
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+
+tags:
+  # Root tags (no parent)
+  - name: Resources
+    summary: API resource operations
+    kind: navigation
+    description: Top-level resource operations
+
+  - name: Admin
+    summary: Administrative operations
+    kind: navigation
+    description: Administrative endpoints
+
+  # Child tags with parent relationships (OAS 3.2 structured tags)
+  - name: Users
+    summary: User management
+    kind: resource
+    parent: Resources
+    description: Operations for managing users
+
+  - name: Products
+    summary: Product catalog
+    kind: resource
+    parent: Resources
+    description: Operations for managing products
+
+  - name: Settings
+    summary: Admin settings
+    kind: config
+    parent: Admin
+    description: Administrative settings and configuration
+
+  - name: Logs
+    summary: System logs
+    kind: monitoring
+    parent: Admin
+    description: Log access and management
+
+paths:
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List all users
+      operationId: listUsers
+      responses:
+        "200":
+          summary: List of users returned successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          summary: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+    # QUERY method - new in OAS 3.2
+    query:
+      tags:
+        - Users
+      summary: Search users with complex query
+      description: |
+        The QUERY method allows submitting a request body for read-only,
+        idempotent operations. This is useful for complex search queries
+        that would be too large for URL query parameters.
+      operationId: searchUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserSearchQuery"
+      responses:
+        "200":
+          summary: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+    # additionalOperations - new in OAS 3.2 for non-standard HTTP methods
+    additionalOperations:
+      PURGE:
+        tags:
+          - Admin
+        summary: Purge user cache
+        description: Custom PURGE method to clear the user cache
+        operationId: purgeUserCache
+        responses:
+          "204":
+            summary: Cache purged successfully
+
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      operationId: getUserById
+      responses:
+        "200":
+          summary: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          summary: User not found
+
+  /products:
+    get:
+      tags:
+        - Products
+      summary: List all products
+      operationId: listProducts
+      # querystring parameter location - new in OAS 3.2
+      parameters:
+        - name: rawQuery
+          in: querystring
+          description: |
+            The entire query string for advanced filtering.
+            New in OAS 3.2: in=querystring allows handling the entire query string.
+          schema:
+            type: string
+      responses:
+        "200":
+          summary: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+
+  /settings:
+    get:
+      tags:
+        - Settings
+      summary: Get system settings
+      operationId: getSettings
+      security:
+        - deviceAuth:
+            - settings:read
+      responses:
+        "200":
+          summary: Settings retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+
+  /logs:
+    get:
+      tags:
+        - Logs
+      summary: Get system logs
+      operationId: getLogs
+      responses:
+        "200":
+          summary: Logs retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogEntry"
+
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    UserInput:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+
+    UserSearchQuery:
+      type: object
+      description: Complex search query for the QUERY method
+      properties:
+        filters:
+          type: object
+          properties:
+            email:
+              type: string
+            nameContains:
+              type: string
+            createdAfter:
+              type: string
+              format: date-time
+            createdBefore:
+              type: string
+              format: date-time
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+              minimum: 1
+            pageSize:
+              type: integer
+              minimum: 1
+              maximum: 100
+        sort:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              direction:
+                type: string
+                enum: [asc, desc]
+
+    Product:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: decimal
+
+    Settings:
+      type: object
+      properties:
+        theme:
+          type: string
+          enum: [light, dark, system]
+        language:
+          type: string
+        notifications:
+          type: boolean
+
+    LogEntry:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        level:
+          type: string
+          enum: [debug, info, warn, error]
+        message:
+          type: string
+
+  # Reusable media types - new in OAS 3.2
+  mediaTypes:
+    JsonResponse:
+      schema:
+        type: object
+        properties:
+          data:
+            type: object
+          meta:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              requestId:
+                type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+    # OAuth 2.0 Device Authorization Grant - new in OAS 3.2
+    deviceAuth:
+      type: oauth2
+      flows:
+        deviceAuthorization:
+          deviceAuthorizationUrl: https://auth.example.com/device/code
+          tokenUrl: https://auth.example.com/oauth/token
+          scopes:
+            settings:read: Read settings
+            settings:write: Modify settings
+            logs:read: Read logs
