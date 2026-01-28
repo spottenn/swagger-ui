@@ -3,6 +3,7 @@
  */
 import StructuredTags from "./components/structured-tags"
 import ResponseSummary from "./components/response-summary"
+import StreamingBadge from "./components/streaming-badge"
 import {
   isOAS32 as isOAS32Fn,
   createOnlyOAS32Selector as createOnlyOAS32SelectorFn,
@@ -23,6 +24,11 @@ import {
   selectMediaTypes,
   selectDeviceAuthorizationFlow,
   selectQuerystringParameters,
+  isStreamingMediaType as isStreamingMediaTypeFn,
+  selectItemSchema,
+  selectItemEncoding,
+  selectPrefixEncoding,
+  isStreamingResponse,
 } from "./spec-extensions/selectors"
 import {
   isOAS3 as isOAS3WrapSelector,
@@ -40,6 +46,7 @@ const OAS32Plugin = ({ fn }) => {
     afterLoad,
     fn: {
       isOAS32: isOAS32Fn,
+      isStreamingMediaType: isStreamingMediaTypeFn,
       createOnlyOAS32Selector: createOnlyOAS32SelectorFn,
       createOnlyOAS32SelectorWrapper: createOnlyOAS32SelectorWrapperFn,
       createOnlyOAS32ComponentWrapper: createOnlyOAS32ComponentWrapperFn,
@@ -47,6 +54,7 @@ const OAS32Plugin = ({ fn }) => {
     components: {
       OAS32StructuredTags: StructuredTags,
       OAS32ResponseSummary: ResponseSummary,
+      OAS32StreamingBadge: StreamingBadge,
     },
     wrapComponents: {},
     statePlugins: {
@@ -82,6 +90,12 @@ const OAS32Plugin = ({ fn }) => {
 
           // Querystring parameter location (new in OAS 3.2)
           selectQuerystringParameters: createOnlyOAS32Selector(selectQuerystringParameters), // prettier-ignore
+
+          // Streaming media types (new in OAS 3.2)
+          selectItemSchema: createOnlyOAS32Selector(selectItemSchema),
+          selectItemEncoding: createOnlyOAS32Selector(selectItemEncoding),
+          selectPrefixEncoding: createOnlyOAS32Selector(selectPrefixEncoding),
+          isStreamingResponse: createOnlyOAS32Selector(isStreamingResponse),
 
           // JSON Schema dialect default (same as OAS 3.1)
           selectJsonSchemaDialectDefault,

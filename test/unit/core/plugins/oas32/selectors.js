@@ -3,6 +3,7 @@ import {
   selectTagHierarchy,
   validOperationMethods,
   isQuerystringParameter,
+  isStreamingMediaType,
 } from "core/plugins/oas32/spec-extensions/selectors"
 
 describe("OAS 3.2 selectors", function () {
@@ -123,6 +124,38 @@ describe("OAS 3.2 selectors", function () {
       expect(isQuerystringParameter(null)).toEqual(false)
       expect(isQuerystringParameter(undefined)).toEqual(false)
       expect(isQuerystringParameter("string")).toEqual(false)
+    })
+  })
+
+  describe("isStreamingMediaType", function () {
+    it("should return true for text/event-stream", function () {
+      expect(isStreamingMediaType("text/event-stream")).toEqual(true)
+    })
+
+    it("should return true for application/jsonl", function () {
+      expect(isStreamingMediaType("application/jsonl")).toEqual(true)
+    })
+
+    it("should return true for application/x-ndjson", function () {
+      expect(isStreamingMediaType("application/x-ndjson")).toEqual(true)
+    })
+
+    it("should return true for application/json-seq", function () {
+      expect(isStreamingMediaType("application/json-seq")).toEqual(true)
+    })
+
+    it("should return false for application/json", function () {
+      expect(isStreamingMediaType("application/json")).toEqual(false)
+    })
+
+    it("should return false for text/html", function () {
+      expect(isStreamingMediaType("text/html")).toEqual(false)
+    })
+
+    it("should return false for non-string values", function () {
+      expect(isStreamingMediaType(null)).toEqual(false)
+      expect(isStreamingMediaType(undefined)).toEqual(false)
+      expect(isStreamingMediaType(123)).toEqual(false)
     })
   })
 })

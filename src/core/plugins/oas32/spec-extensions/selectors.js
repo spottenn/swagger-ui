@@ -220,3 +220,117 @@ export const selectQuerystringParameters =
 
     return parameters.filter(isQuerystringParameter)
   }
+
+/**
+ * Known sequential/streaming media type patterns.
+ * These are media types where itemSchema applies to each item in the stream.
+ */
+const STREAMING_MEDIA_TYPES = [
+  "text/event-stream",
+  "application/jsonl",
+  "application/x-ndjson",
+  "application/json-seq",
+]
+
+/**
+ * Checks whether a given media type string is a streaming/sequential type.
+ */
+export const isStreamingMediaType = (mediaType) => {
+  if (typeof mediaType !== "string") return false
+  return STREAMING_MEDIA_TYPES.some((streamType) =>
+    mediaType.startsWith(streamType)
+  )
+}
+
+/**
+ * Selects the itemSchema for a streaming media type in a response.
+ * New in OAS 3.2: itemSchema describes the schema of each individual item
+ * in a streaming response (e.g., each SSE event or JSON Lines entry).
+ */
+export const selectItemSchema =
+  (state, path, method, statusCode, mediaType) => (system) => {
+    const mediaTypeObj = system.specSelectors
+      .specJson()
+      .getIn([
+        "paths",
+        path,
+        method,
+        "responses",
+        statusCode,
+        "content",
+        mediaType,
+      ])
+
+    if (!Map.isMap(mediaTypeObj)) return null
+    return mediaTypeObj.get("itemSchema", null)
+  }
+
+/**
+ * Selects the itemEncoding for a streaming media type in a response.
+ * New in OAS 3.2: itemEncoding defines how each streamed item is encoded
+ * (e.g., as text, JSON, binary).
+ */
+export const selectItemEncoding =
+  (state, path, method, statusCode, mediaType) => (system) => {
+    const mediaTypeObj = system.specSelectors
+      .specJson()
+      .getIn([
+        "paths",
+        path,
+        method,
+        "responses",
+        statusCode,
+        "content",
+        mediaType,
+      ])
+
+    if (!Map.isMap(mediaTypeObj)) return null
+    return mediaTypeObj.get("itemEncoding", null)
+  }
+
+/**
+ * Selects the prefixEncoding for a media type.
+ * New in OAS 3.2: prefixEncoding can be used instead of encoding
+ * for multipart media types with prefix-based encoding.
+ */
+export const selectPrefixEncoding =
+  (state, path, method, statusCode, mediaType) => (system) => {
+    const mediaTypeObj = system.specSelectors
+      .specJson()
+      .getIn([
+        "paths",
+        path,
+        method,
+        "responses",
+        statusCode,
+        "content",
+        mediaType,
+      ])
+
+    if (!Map.isMap(mediaTypeObj)) return null
+    return mediaTypeObj.get("prefixEncoding", null)
+  }
+
+/**
+ * Determines whether a specific response media type is a streaming response.
+ * Returns true if the media type is a known streaming type and has itemSchema.
+ */
+export const isStreamingResponse =
+  (state, path, method, statusCode, mediaType) => (system) => {
+    if (!isStreamingMediaType(mediaType)) return false
+
+    const mediaTypeObj = system.specSelectors
+      .specJson()
+      .getIn([
+        "paths",
+        path,
+        method,
+        "responses",
+        statusCode,
+        "content",
+        mediaType,
+      ])
+
+    if (!Map.isMap(mediaTypeObj)) return false
+    return mediaTypeObj.has("itemSchema")
+  }

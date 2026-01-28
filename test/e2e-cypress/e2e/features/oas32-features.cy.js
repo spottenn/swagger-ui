@@ -67,6 +67,22 @@ describe("OpenAPI 3.2 features", () => {
     })
   })
 
+  describe("Streaming endpoints (SSE / JSON Lines)", () => {
+    it("should display the Streaming tag", () => {
+      cy.get(".opblock-tag[data-tag='Streaming']").should("exist")
+    })
+
+    it("should display the SSE events endpoint", () => {
+      cy.get(".opblock-tag[data-tag='Streaming']").click()
+      cy.get(".opblock-summary-path").should("contain", "/events")
+    })
+
+    it("should display the JSON Lines log stream endpoint", () => {
+      cy.get(".opblock-tag[data-tag='Streaming']").click()
+      cy.get(".opblock-summary-path").should("contain", "/logs/stream")
+    })
+  })
+
   describe("Info section with summary", () => {
     it("should display the info summary", () => {
       cy.get(".info").should("exist")

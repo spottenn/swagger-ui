@@ -11,6 +11,7 @@ info:
     - Response summary field (description now optional)
     - OAuth 2.0 Device Authorization Grant
     - Reusable media types in components
+    - Streaming media types with itemSchema/itemEncoding (SSE, JSON Lines)
   version: "1.0.0"
   contact:
     name: API Support
@@ -60,6 +61,11 @@ tags:
     kind: monitoring
     parent: Admin
     description: Log access and management
+
+  - name: Streaming
+    summary: Streaming endpoints
+    kind: streaming
+    description: Endpoints that use OAS 3.2 streaming media types
 
 paths:
   /users:
@@ -215,6 +221,63 @@ paths:
                 items:
                   $ref: "#/components/schemas/LogEntry"
 
+  # Streaming media types - new in OAS 3.2 (itemSchema, itemEncoding)
+  /events:
+    get:
+      tags:
+        - Streaming
+      summary: Subscribe to server-sent events
+      description: |
+        Returns a stream of server-sent events using text/event-stream.
+        OAS 3.2 introduces itemSchema and itemEncoding to describe the
+        schema and encoding of each individual event in the stream.
+      operationId: subscribeToEvents
+      responses:
+        "200":
+          summary: SSE event stream
+          content:
+            text/event-stream:
+              # schema describes the complete stream as an array
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServerEvent"
+              # itemSchema describes each individual event in the stream
+              itemSchema:
+                oneOf:
+                  - $ref: "#/components/schemas/ServerEvent"
+                  - type: object
+                    properties:
+                      data:
+                        const: "[DONE]"
+                    required:
+                      - data
+              itemEncoding:
+                contentType: text/plain
+
+  /logs/stream:
+    get:
+      tags:
+        - Streaming
+      summary: Stream log entries as JSON Lines
+      description: |
+        Returns a stream of log entries in JSON Lines format.
+        Each line is a separate JSON object conforming to the itemSchema.
+      operationId: streamLogs
+      responses:
+        "200":
+          summary: JSON Lines log stream
+          content:
+            application/jsonl:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogEntry"
+              itemSchema:
+                $ref: "#/components/schemas/LogEntry"
+              itemEncoding:
+                contentType: application/json
+
 components:
   schemas:
     User:
@@ -323,6 +386,35 @@ components:
           enum: [debug, info, warn, error]
         message:
           type: string
+
+    ServerEvent:
+      type: object
+      description: An individual server-sent event
+      required:
+        - event
+        - data
+      properties:
+        event:
+          type: string
+          description: The event type
+          enum: [message, update, error]
+        data:
+          type: object
+          description: The event payload
+          properties:
+            id:
+              type: string
+            content:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+        id:
+          type: string
+          description: Optional event ID for reconnection
+        retry:
+          type: integer
+          description: Reconnection time in milliseconds
 
   # Reusable media types - new in OAS 3.2
   mediaTypes:
