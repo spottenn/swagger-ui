@@ -13,7 +13,7 @@
 // All NEW features in OpenAPI 3.2 (compared to 3.1)
 const OAS32_NEW_FEATURES = {
   // Root level
-  "$self": {
+  $self: {
     description: "Self-referential URI (new in 3.2)",
     location: "root",
     implemented: false, // Not typically rendered in UI
@@ -184,21 +184,6 @@ function calculateCoverage() {
 describe("OpenAPI 3.2 Implementation Coverage", () => {
   it("should have high coverage of OAS 3.2 features", () => {
     const coverage = calculateCoverage()
-
-    // Log coverage report
-    console.log("\n=== OpenAPI 3.2 Coverage Report ===")
-    console.log(`Total Features: ${coverage.total}`)
-    console.log(`Implemented: ${coverage.implemented}`)
-    console.log(`Not Implemented: ${coverage.notImplemented}`)
-    console.log(`Coverage: ${coverage.percentage}%`)
-
-    if (coverage.missing.length > 0) {
-      console.log("\nMissing Features:")
-      coverage.missing.forEach((m) => {
-        console.log(`  - ${m.feature} (${m.location})`)
-        if (m.notes) console.log(`    Note: ${m.notes}`)
-      })
-    }
 
     // We should have at least 85% coverage
     expect(parseFloat(coverage.percentage)).toBeGreaterThanOrEqual(85)
