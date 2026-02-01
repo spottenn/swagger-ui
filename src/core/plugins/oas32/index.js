@@ -1,10 +1,12 @@
 /**
  * @prettier
  */
+import Info from "./components/info"
 import VersionPragmaFilter from "./components/version-pragma-filter"
 import DeviceAuthorizationAuth from "./components/auth/device-authorization-auth"
 import StructuredTag from "./components/tags/structured-tag"
 import ResponseSummary from "./components/response-summary"
+import InfoWrapper from "./wrap-components/info"
 import VersionPragmaFilterWrapper from "./wrap-components/version-pragma-filter"
 import AuthItemWrapper from "./wrap-components/auth/auth-item"
 import {
@@ -78,12 +80,14 @@ const OAS32Plugin = ({ fn }) => {
       createOnlyOAS32Selector: createOnlyOAS32SelectorFn,
     },
     components: {
+      OAS32Info: Info,
       DeviceAuthorizationAuth,
       StructuredTag,
       ResponseSummary,
       OAS32VersionPragmaFilter: VersionPragmaFilter,
     },
     wrapComponents: {
+      InfoContainer: InfoWrapper,
       VersionPragmaFilter: VersionPragmaFilterWrapper,
       AuthItem: AuthItemWrapper,
     },
