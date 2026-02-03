@@ -1,6 +1,6 @@
 {
   "name": "swagger-ui",
-  "version": "5.31.0",
+  "version": "5.32.0",
   "main": "./dist/swagger-ui.js",
   "module": "./dist/swagger-ui-es-bundle-core.js",
   "exports": {
@@ -76,7 +76,9 @@
     "@babel/runtime-corejs3": "^7.27.1",
     "@scarf/scarf": "=1.4.0",
     "base64-js": "^1.5.1",
+    "baseline-browser-mapping": "=2.9.19",
     "buffer": "^6.0.3",
+    "caniuse-lite": "=1.0.30001767",
     "classnames": "^2.5.1",
     "css.escape": "1.5.1",
     "deep-extend": "0.6.0",

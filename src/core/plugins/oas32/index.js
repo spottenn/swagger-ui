@@ -7,6 +7,7 @@ import StructuredTag from "./components/tags/structured-tag"
 import ResponseSummary from "./components/response-summary"
 import VersionPragmaFilterWrapper from "./wrap-components/version-pragma-filter"
 import AuthItemWrapper from "./wrap-components/auth/auth-item"
+import OpenAPIVersionWrapper from "./wrap-components/openapi-version"
 import {
   isOAS32 as isOAS32Fn,
   createOnlyOAS32Selector as createOnlyOAS32SelectorFn,
@@ -35,6 +36,8 @@ import {
   isOAS31 as isOAS31SelectorWrapper,
   validOperationMethods as validOperationMethodsWrapper,
   selectJsonSchemaDialectDefault as selectJsonSchemaDialectDefaultWrapper,
+  operations as operationsWrapper,
+  taggedOperations as taggedOperationsWrapper,
 } from "./spec-extensions/wrap-selectors"
 import { definitionsToAuthorize as definitionsToAuthorizeWrapper } from "./auth-extensions/wrap-selectors"
 import {
@@ -86,6 +89,7 @@ const OAS32Plugin = ({ fn }) => {
     wrapComponents: {
       VersionPragmaFilter: VersionPragmaFilterWrapper,
       AuthItem: AuthItemWrapper,
+      OpenAPIVersion: OpenAPIVersionWrapper,
     },
     statePlugins: {
       auth: {
@@ -127,6 +131,8 @@ const OAS32Plugin = ({ fn }) => {
           isOAS31: isOAS31SelectorWrapper,
           validOperationMethods: validOperationMethodsWrapper,
           selectJsonSchemaDialectDefault: selectJsonSchemaDialectDefaultWrapper,
+          operations: operationsWrapper,
+          taggedOperations: taggedOperationsWrapper,
         },
       },
       oas32: {
